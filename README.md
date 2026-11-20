@@ -1,6 +1,6 @@
 # 🍽️ Restaurante API
 
-API REST para gestão de restaurante, desenvolvida com **Java 21** e **Spring Boot**, responsável pelo cadastro de produtos do cardápio e pelo controle de pedidos por mesa.
+API REST para gestão de restaurante, desenvolvida com **Java 21** e **Spring Boot**, responsável pelo cadastro de produtos do cardápio, pelo controle de pedidos por mesa e pelo fluxo de preparo dos itens na cozinha.
 
 ![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.2-6DB33F?logo=springboot)
@@ -47,7 +47,7 @@ Projeto organizado em camadas:
 
 ```
 src/main/java/com/sistema/restaurante
-├── controller/        # Endpoints REST (Produto, Pedido)
+├── controller/        # Endpoints REST (Produto, Pedido, Cozinha)
 ├── service/           # Regras de negócio
 ├── repository/        # Interfaces Spring Data JPA
 ├── domain/
@@ -106,6 +106,13 @@ src/main/resources
 - A quantidade deve ser maior que zero.
 - O preço unitário do item é copiado do preço atual do produto; o item inicia como `PENDENTE`.
 - O total do item é calculado como `precoUnitario × quantidade`.
+
+**Cozinha**
+- Os itens seguem o fluxo `PENDENTE` → `EM_PREPARO` → `PRONTO` → `ENTREGUE`.
+- Só itens `PENDENTE` podem iniciar o preparo.
+- Só itens `EM_PREPARO` podem ser marcados como prontos.
+- Só itens `PRONTO` podem ser entregues.
+- As listas de itens pendentes e em preparo são ordenadas por ID (ordem de chegada).
 
 **Produtos**
 - O produto deve pertencer a uma categoria existente.
@@ -167,6 +174,33 @@ src/main/resources
   "produtoId": 2,
   "quantidade": 2,
   "observacao": "Sem cebola"
+}
+```
+</details>
+
+### Cozinha — `/cozinha`
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/cozinha/itens-pendentes` | Lista itens com status `PENDENTE` |
+| `GET` | `/cozinha/itens-em-preparo` | Lista itens com status `EM_PREPARO` |
+| `PATCH` | `/cozinha/itens/{itemId}/iniciar-preparo` | Muda o item de `PENDENTE` para `EM_PREPARO` |
+| `PATCH` | `/cozinha/itens/{itemId}/marcar-pronto` | Muda o item de `EM_PREPARO` para `PRONTO` |
+| `PATCH` | `/cozinha/itens/{itemId}/entregar` | Muda o item de `PRONTO` para `ENTREGUE` |
+
+<details>
+<summary>Exemplo de resposta</summary>
+
+```json
+{
+  "itemId": 1,
+  "pedidoId": 1,
+  "numeroMesa": 1,
+  "produtoNome": "X-Burger Artesanal",
+  "quantidade": 2,
+  "observacao": "Sem cebola",
+  "precoUnitario": 34.90,
+  "status": "EM_PREPARO"
 }
 ```
 </details>
